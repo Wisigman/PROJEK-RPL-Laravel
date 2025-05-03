@@ -4,200 +4,74 @@
 
 @section('content')
 <head>
-    <!-- Menambahkan Bootstrap Icons CDN -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
-    <!-- Menambahkan CSS Bootstrap untuk table -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 
-<body>
-    <style>
-html, body {
-    height: 100%; /* Pastikan html dan body memiliki tinggi penuh */
-    margin: 0;
-    padding: 0;
-}
+<body class="font-sans bg-cover bg-center">
 
-body {
-    font-family: 'Poppins', sans-serif;
-    background-image: url('{{ asset('storage/bg.jpg') }}');
-    background-size: cover;  /* Membuat gambar memenuhi layar */
-    background-position: center;  /* Memastikan gambar ditempatkan di tengah */
-    background-repeat: repeat;  /* Tidak ada pengulangan gambar */
-    min-height: 100vh;  /* Pastikan body memiliki tinggi minimal 100% dari tinggi layar */
-    display: flex;
-    flex-direction: column;
-}
+    <div class="bg-white p-8 rounded-xl shadow-lg max-w-4xl mx-auto my-8">
+        
+        <div class="text-center text-3xl font-bold text-gray-800 mb-8">Detail Barang</div>
 
-.page-title {
-    text-align: center;
-    font-size: 2rem;
-    font-weight: 600;
-    margin-bottom: 20px;
-    color: #2c3e50;
-}
-
-.item-card {
-    background-color: #ffffff;
-    padding: 30px;
-    border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    margin: 20px auto;
-    width: 80%;
-    z-index: 1;  /* Pastikan elemen ini berada di atas gambar background */
-}
-
-.item-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 6px 25px rgba(0, 0, 0, 0.15);
-}
-
-
-        .item-image {
-            display: flex;
-            justify-content: center;
-            margin-bottom: 20px;
-        }
-
-        .item-image img {
-            width: 200px;
-            height: 200px;
-            object-fit: cover;
-            border-radius: 12px;
-            border: 3px solid #e1e8ed;
-        }
-
-        .no-image {
-            color: #7f8c8d;
-            font-style: italic;
-        }
-
-        .item-name {
-            font-size: 1.8rem;
-            font-weight: bold;
-            text-align: center;
-            color: #2c3e50;
-            margin-bottom: 15px;
-        }
-
-        .table {
-            width: 80%;
-            margin: 0 auto;
-            border-collapse: collapse;
-        }
-
-        .table th, .table td {
-            text-align: left;
-            padding: 15px;
-            vertical-align: middle;
-            border: 1px solid #e1e8ed;
-        }
-
-        .table th {
-            background-color: #f1f5f9;
-            color: #34495e;
-            font-weight: 600;
-        }
-
-        .table td {
-            background-color: #ffffff;
-            color: #2c3e50;
-        }
-
-        .table th i {
-            margin-right: 10px;
-            color: #3498db;
-        }
-
-        .highlight {
-            font-weight: bold;
-            color: #27ae60;
-        }
-
-    .back-btn {
-    text-align: center;
-    margin-top: 30px;
-    z-index: 1; /* Pastikan tombol kembali tetap berada di atas background */
-}
-
-.btn-primary {
-    background-color: #3498db;
-    color: white;
-    padding: 12px 25px;
-    border-radius: 8px;
-    text-decoration: none;
-    font-size: 1.1rem;
-    transition: background-color 0.3s ease, transform 0.3s ease;
-}
-
-.btn-primary:hover {
-    background-color: #1f78c1;
-    transform: scale(1.05);
-}
-    </style>
-
-    <div class="page-title">Detail Barang</div>
-
-    <h3 class="item-name">Nama Pengirim: {{ $barang->user->name }}</h3>
-
-    <div class="item-card">
-
-        <div class="item-image">
+        <div class="flex justify-center mb-6">
             @if ($barang->foto_barang)
-                <img src="{{ Storage::url('public/' . $barang->foto_barang) }}" alt="{{ $barang->nama_barang }}">
+                <img src="{{ Storage::url('public/' . $barang->foto_barang) }}" alt="{{ $barang->nama_barang }}" class="w-48 h-48 object-cover rounded-lg border-4 border-gray-300">
             @else
-                <span class="no-image">Tidak ada gambar</span>
+                <span class="text-gray-500 italic">Tidak ada gambar</span>
             @endif
         </div>
 
-        <h2 class="item-name">{{ $barang->nama_barang }}</h2>
+        <h2 class="text-3xl font-semibold text-gray-800 text-center mb-4">{{ $barang->nama_barang }}</h2>
+        <h3 class="text-xl text-gray-800 text-center mb-6">Nama Pengirim: {{ $barang->user->name }}</h3>
 
         <!-- Tabel untuk menampilkan informasi barang -->
-        <table class="table table-bordered">
+        <table class="min-w-full table-auto border-collapse border border-gray-300 mx-auto mb-8">
             <tbody>
-                <tr>
-                    <th><i class="bi bi-currency-dollar"></i> Harga per Satuan Awal</th>
-                    <td>Rp.{{ number_format($barang->harga_barang - 1000, 2, ',', '.') }}</td>
+                <tr class="border-b border-gray-200">
+                    <th class="text-left p-4 font-semibold text-gray-700"><i class="bi bi-currency-dollar mr-2 text-blue-500"></i> Harga per Satuan Awal</th>
+                    <td class="p-4 text-gray-700">Rp.{{ number_format($barang->harga_barang - 1000, 2, ',', '.') }}</td>
+                </tr>
+                <tr class="border-b border-gray-200">
+                    <th class="text-left p-4 font-semibold text-gray-700"><i class="bi bi-tag mr-2 text-blue-500"></i> Harga per Satuan Jual</th>
+                    <td class="p-4 text-gray-700">Rp.{{ number_format($barang->harga_barang, 2, ',', '.') }}</td>
+                </tr>
+                <tr class="border-b border-gray-200">
+                    <th class="text-left p-4 font-semibold text-gray-700"><i class="bi bi-box mr-2 text-blue-500"></i> Jumlah Barang Awal</th>
+                    <td class="p-4 text-gray-700">{{ $barang->jumlah_barang_awal }}</td>
+                </tr>
+                <tr class="border-b border-gray-200">
+                    <th class="text-left p-4 font-semibold text-gray-700"><i class="bi bi-cart-check mr-2 text-blue-500"></i> Jumlah Barang Terjual</th>
+                    <td class="p-4 text-gray-700">{{ $barang->jumlah_barang_awal - $jumlahBarangSisa }}</td>
+                </tr>
+                <tr class="border-b border-gray-200">
+                    <th class="text-left p-4 font-semibold text-gray-700"><i class="bi bi-box-seam mr-2 text-blue-500"></i> Jumlah Barang Sisa</th>
+                    <td class="p-4 text-gray-700">{{ $jumlahBarangSisa }}</td>
+                </tr>
+                <tr class="border-b border-gray-200">
+                    <th class="text-left p-4 font-semibold text-gray-700"><i class="bi bi-graph-up mr-2 text-blue-500"></i> Total Harga Terjual</th>
+                    <td class="p-4 text-gray-700">Rp.{{ number_format($totalHargaTerjual, 2, ',', '.') }}</td>
+                </tr>
+                <tr class="border-b border-gray-200">
+                    <th class="text-left p-4 font-semibold text-gray-700"><i class="bi bi-wallet2 mr-2 text-blue-500"></i> Hasil Untuk Pengirim</th>
+                    <td class="p-4 text-green-600 font-semibold">Rp.{{ number_format($totalHasilPengiriman, 2, ',', '.') }}</td>
+                </tr>
+                <tr class="border-b border-gray-200">
+                    <th class="text-left p-4 font-semibold text-gray-700"><i class="bi bi-trophy mr-2 text-blue-500"></i> Keuntungan PKK</th>
+                    <td class="p-4 text-green-600 font-semibold">Rp.{{ number_format($keuntunganPKK, 2, ',', '.') }}</td>
                 </tr>
                 <tr>
-                    <th><i class="bi bi-tag"></i> Harga per Satuan Jual</th>
-                    <td>Rp.{{ number_format($barang->harga_barang, 2, ',', '.') }}</td>
-                </tr>
-                <tr>
-                    <th><i class="bi bi-box"></i> Jumlah Barang Awal</th>
-                    <td>{{ $barang->jumlah_barang_awal }}</td>
-                </tr>
-                <tr>
-                    <th><i class="bi bi-cart-check"></i> Jumlah Barang Terjual</th>
-                    <td>{{ $barang->jumlah_barang_awal - $jumlahBarangSisa }}</td>
-                </tr>
-                <tr>
-                    <th><i class="bi bi-box-seam"></i> Jumlah Barang Sisa</th>
-                    <td>{{ $jumlahBarangSisa }}</td>
-                </tr>
-                <tr>
-                    <th><i class="bi bi-graph-up"></i> Total Harga Terjual</th>
-                    <td>Rp.{{ number_format($totalHargaTerjual, 2, ',', '.') }}</td>
-                </tr>
-                <tr>
-                    <th><i class="bi bi-wallet2"></i> Hasil Untuk Pengirim</th>
-                    <td><span class="highlight">Rp.{{ number_format($totalHasilPengiriman, 2, ',', '.') }}</span></td>
-                </tr>
-                <tr>
-                    <th><i class="bi bi-trophy"></i> Keuntungan PKK</th>
-                    <td><span class="highlight">Rp.{{ number_format($keuntunganPKK, 2, ',', '.') }}</span></td>
+                    <th class="text-left p-4 font-semibold text-gray-700"><i class="bi bi-plus-circle mr-2 text-blue-500"></i> Keuntungan RPL (500 per Barang)</th>
+                    <td class="p-4 text-green-600 font-semibold">Rp.{{ number_format($jumlahBarangTerjual * 500, 2, ',', '.') }}</td>
                 </tr>
             </tbody>
         </table>
-
+        <div class="text-center mt-8">
+            <a href="{{ route('barangs.index') }}" class="bg-blue-500 text-white px-6 py-3 rounded-full text-lg font-semibold hover:bg-blue-600 transition-transform duration-300 relative hover:scale-105 no-underline">
+                Kembali
+            </a>
+        </div>
     </div>
 
-    <div class="back-btn">
-        <a href="{{ route('barangs.index') }}" class="btn btn-primary">Kembali</a>
-    </div>
-
-    <br><br><br>
 </body>
 
 @endsection

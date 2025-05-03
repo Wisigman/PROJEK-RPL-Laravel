@@ -29,14 +29,40 @@ class RegisteredUserController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
-        // Validasi input
+        // Validasi input tanpa foto
         $request->validate([
-            'name' => ['required', 'string', 'max:255'],
+            'name' => [
+                'required', 
+                'string', 
+                'max:255',
+                function ($attribute, $value, $fail) {
+                    $forbiddenWords = ['admin', 'root', 'fuck', 'bitch', 'shit', 'god', 'owner'];
+
+                    // Cek apakah nama mengandung kata terlarang
+                    foreach ($forbiddenWords as $word) {
+                        if (stripos($value, $word) !== false) {
+                            $fail("The $attribute contains forbidden words like \"$word\".");
+                            return;
+                        }
+                    }
+                }
+            ],
+            'username' => [
+                'required', 
+                'string', 
+                'max:255', 
+                'unique:users,username', 
+                function ($attribute, $value, $fail) {
+                    // Cek karakter yang diizinkan
+                    if (!preg_match('/^[a-zA-Z0-9-_]+$/', $value)) {
+                        $fail("The $attribute can only contain letters, numbers, dashes, and underscores.");
+                    }
+                }
+            ],
             'email' => ['required', 'string', 'email', 'lowercase', 'max:255', 'unique:users,email'],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'role' => ['required', 'in:user,supplier,admin'],
             'kode_pendaftaran' => ['required', 'string'],
-            'foto' => ['required', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
         ]);
 
         // Validasi kode pendaftaran berdasarkan role
@@ -51,21 +77,13 @@ class RegisteredUserController extends Controller
             return back()->withErrors(['kode_pendaftaran' => 'Kode pendaftaran salah untuk role yang dipilih!']);
         }
 
-        // Simpan foto ke storage
-        $fotoPath = null;
-        if ($request->hasFile('foto')) {
-            $file = $request->file('foto');
-            $filename = time() . '_' . $file->getClientOriginalName(); // Nama file unik
-            $fotoPath = $file->storeAs('photos', $filename, 'public'); // Simpan ke folder `photos`
-        }
-
-        // Buat pengguna baru
+        // Buat pengguna baru tanpa foto
         $user = User::create([
             'name' => $request->name,
+            'username' => $request->username,
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'role' => $request->role,
-            'foto' => $fotoPath, // Simpan path foto ke database
         ]);
 
         // Trigger event pendaftaran jika diperlukan

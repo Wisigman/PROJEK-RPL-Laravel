@@ -3,140 +3,69 @@
 @section('title', 'Pembayaran Berhasil')
 
 @section('content')
-<style>
-    body {
-        background-image: url('storage/bg.jpg');
-        background-size: cover;
-        background-repeat: repeat;
-        background-position: center;
-    }
+<div class="bg-cover bg-center bg-no-repeat">
+    <div class="container mx-auto py-12 px-6">
+        <div class="max-w-5xl mx-auto bg-white bg-opacity-80 shadow-lg rounded-lg p-8 relative">
 
-    .container {
-        margin-top: 50px;
-    }
-
-    .card {
-        border-radius: 15px;
-        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
-        padding: 20px;
-        background-color: #ffffff;
-        border: none;
-        position: relative;
-    }
-
-    .btn {
-        border-radius: 8px;
-        padding: 10px 20px;
-        transition: all 0.3s ease;
-    }
-
-    .btn-primary {
-        background-color: #007bff;
-        color: white;
-        box-shadow: 0 4px 10px rgba(0, 123, 255, 0.4);
-    }
-
-    .btn-primary:hover {
-        background-color: #0056b3;
-        transform: translateY(-3px);
-        box-shadow: 0 6px 12px rgba(0, 123, 255, 0.6);
-    }
-
-    .btn-success {
-        background-color: #28a745;
-        color: white;
-        box-shadow: 0 4px 10px rgba(40, 167, 69, 0.4);
-    }
-
-    .btn-success:hover {
-        background-color: #218838;
-        transform: translateY(-3px);
-        box-shadow: 0 6px 12px rgba(40, 167, 69, 0.6);
-    }
-
-    .text-center h2 {
-        font-family: 'Roboto', sans-serif;
-        color: #333;
-    }
-
-    .details {
-        font-size: 1rem;
-        color: #555;
-    }
-
-    .total {
-        font-size: 1.2rem;
-        font-weight: bold;
-        color: #28a745;
-    }
-
-    .btn-container {
-        position: absolute;
-        bottom: 20px;
-        right: 20px;
-        display: flex;
-        gap: 10px;
-    }
-
-    .btn-container form {
-        margin: 0;
-    }
-</style>
-
-<div class="container">
-    <div class="card">
-        <div class="card-body">
-            <h5 class="card-title text-center mb-4">Detail Pembayaran</h5>
+            <!-- Header -->
+            <h5 class="text-center text-2xl font-semibold mb-6"><strong>Detail Pembayaran</strong></h5>
             
-            <div class="details">
+            <!-- Detail Pembayaran -->
+            <div class="text-lg text-gray-700 mb-4">
                 <p>Atas Nama: <strong>{{ Auth::user()->name }}</strong></p>
                 <p>ID Pelanggan: <strong>{{ Auth::user()->id }}</strong></p>
                 <p>ID Pesanan: <strong>{{ $order['id'] ?? 'N/A' }}</strong></p>
             </div>
 
-            <div class="mt-3">
-                <p><strong>Detail Pesanan:</strong></p>
-                <table class="table">
+            <!-- Detail Pesanan -->
+            <div class="mb-6">
+                <p class="font-semibold text-lg">Detail Pesanan:</p>
+                <table class="min-w-full table-auto border-collapse">
                     <thead>
-                        <tr>
-                            <th>Nama Barang</th>
-                            <th>Harga</th>
-                            <th>Jumlah</th>
-                            <th>Total Harga</th>
+                        <tr class="bg-gray-100 text-gray-700">
+                            <th class="px-4 py-2 mt-1">Nama Barang</th>
+                            <th class="px-4 py-2 mt-1">Harga</th>
+                            <th class="px-4 py-2 mt-1">Jumlah</th>
+                            <th class="px-4 py-2 mt-1">Deskripsi</th> <!-- Menambahkan Kolom Deskripsi -->
+                            <th class="px-4 py-2 mt-1">Total Harga</th>
                         </tr>
                     </thead>
                     <tbody>
                     @if(empty($cartItems))
-                        <p>Item pesanan tidak ditemukan.</p>
+                        <tr>
+                            <td colspan="5" class="text-center text-red-500 mt-4 mb-4">Item pesanan tidak ditemukan.</td>
+                        </tr>
                     @else
                         @foreach ($cartItems as $item)
-                            <tr>
-                                <td>{{ $item['name'] }}</td>
-                                <td>Rp. {{ number_format($item['price'], 2, ',', '.') }}</td>
-                                <td>{{ $item['quantity'] }}</td>
-                                <td>Rp. {{ number_format($item['price'] * $item['quantity'], 2, ',', '.') }}</td>
+                            <tr class="border-b">
+                                <td class="px-4 py-2">{{ $item['name'] }}</td>
+                                <td class="px-4 py-2">Rp. {{ number_format($item['price'], 2, ',', '.') }}</td>
+                                <td class="px-4 py-2">{{ $item['quantity'] }}</td>
+                                <td class="px-4 py-2">{{ $item['description'] ?? 'Tidak ada deskripsi' }}</td> <!-- Menampilkan Deskripsi -->
+                                <td class="px-4 py-2">Rp. {{ number_format($item['price'] * $item['quantity'], 2, ',', '.') }}</td>
                             </tr>
                         @endforeach
                     @endif
                     </tbody>
                 </table>
                 
-                <h6 class="text-right">Total Semua: <b>Rp. {{ number_format($totalHarga, 2, ',', '.') }}</b></h6>
-
-            <!-- Tombol di bagian kanan bawah -->
-            <div class="btn-container">
+                <h6 class="text-right text-xl font-bold text-green-600 mt-6">Total Semua: <span class="font-bold">Rp. {{ number_format($totalHarga, 2, ',', '.') }}</span></h6><br>
+            </div>
+            
+            <!-- Tombol di bagian kanan bawah dengan margin tambahan -->
+            <div class="absolute bottom-5 right-5 flex gap-4 mt-8"> <!-- Menambahkan margin top (mt-8) -->
                 <!-- Tombol Download PDF -->
-                <a href="{{ route('cart.downloadPdf', ['id' => $cart->id ?? 0]) }}" class="btn btn-primary">Download PDF</a>
+                <a href="{{ route('cart.downloadPdf', ['id' => $cart->id ?? 0]) }}" class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg shadow-lg transform transition-all duration-300 ease-in-out hover:translate-y-1">
+                    Download PDF
+                </a>
                 
                 <!-- Tombol Selesai -->
-                <form action="{{ route('cart.selesai') }}" method="POST">
-                    @csrf
-                    <button type="submit" class="btn btn-success" onclick="return confirm('Apakah sudah Anda tunjukkan ke petugas?')">Selesai</button>
-                </form>
-            </div>
+                <a href="{{ route('checkout.success') }}" class="bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-lg shadow-lg transform transition-all duration-300 ease-in-out hover:translate-y-1">
+                    Selesai
+                </a>
+            </div>            
+
         </div>
     </div>
 </div>
-</div>
-<br><br><br>
 @endsection

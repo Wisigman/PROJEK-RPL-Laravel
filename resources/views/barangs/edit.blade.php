@@ -1,95 +1,132 @@
 @extends('layouts.app')
 
+@section('title', 'Edit Barang')
+
 @section('content')
-<body>
-    <div class="container py-5">
-        <div class="row justify-content-center">
-            <div class="col-lg-8">
-                <div class="card shadow-lg border-0">
-                    <div class="card-header bg-gradient bg-primary text-white text-center py-4">
-                        <h2 class="fw-bold">Edit Barang</h2>
-                    </div>
-                    <div class="card-body p-5">
-                        <form action="{{ route('barangs.update', $barang) }}" method="POST" enctype="multipart/form-data" onsubmit="return validateForm()">
-                            @csrf
-                            @method('PUT')
+<div class="min-h-screen bg-cover bg-center">
+    <div class="flex justify-center items-center h-full py-5">
+        <div class="bg-white bg-opacity-80 p-8 rounded-xl shadow-lg max-w-2xl w-full">
+            <div class="text-center py-4 mb-6">
+                <h2 class="text-3xl font-bold text-primary">Edit Barang</h2>
+            </div>
+            
+            <form action="{{ route('barangs.update', $barang) }}" method="POST" enctype="multipart/form-data" onsubmit="return validateForm()">
+                @csrf
+                @method('PUT')
 
-                            <!-- Nama Barang -->
-                            <div class="mb-4">
-                                <label for="nama_barang" class="form-label fw-bold">Nama Barang</label>
-                                <input type="text" name="nama_barang" id="nama_barang" class="form-control rounded-pill shadow-sm" value="{{ old('nama_barang', $barang->nama_barang) }}" required>
-                            </div>
+                <!-- Nama Barang -->
+                <div class="mb-4">
+                    <label for="nama_barang" class="block text-lg font-semibold text-gray-700">Nama Barang</label>
+                    <input type="text" name="nama_barang" id="nama_barang" 
+                           class="w-full px-4 py-3 border border-gray-300 rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                           value="{{ old('nama_barang', $barang->nama_barang) }}" required>
+                </div>
 
-                            <!-- Harga Barang -->
-                            <div class="mb-4">
-                                <label for="harga_barang" class="form-label fw-bold">Harga Barang</label>
-                                <input type="number" name="harga_barang" id="harga_barang" class="form-control rounded-pill shadow-sm" value="{{ old('harga_barang', $barang->harga_pokok + 1000) }}" required oninput="updateHarga()">
-                                <small class="form-text text-muted">Harga sebelum pajak</small>
-                            </div>
+                <!-- Kategori -->
+                <div class="mb-4">
+                    <label for="kategori_barang" class="block text-lg font-semibold text-gray-700">Kategori</label>
+                    <select id="kategori_barang" name="kategori_barang" required
+                    class="w-full px-4 py-3 border border-gray-300 rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="" disabled {{ old('kategori_barang') ? '' : 'selected' }}>Pilih Kategori</option>
+                        <option value="makanan" {{ old('kategori_barang') === 'makanan' ? 'selected' : '' }}>Makanan</option>
+                        <option value="kerajinan" {{ old('kategori_barang') === 'kerajinan' ? 'selected' : '' }}>Kerajinan</option>
+                    </select>
+                    @error('kategori')<span class="text-red-600 text-sm">{{ $message }}</span>@enderror
+                </div>
 
-                            <!-- Harga Setelah Pajak -->
-                            <div class="mb-4">
-                                <label for="harga_dengan_pajak" class="form-label fw-bold">Harga Setelah Pajak</label>
-                                <input type="text" id="harga_dengan_pajak" class="form-control rounded-pill shadow-sm bg-light text-dark" readonly value="{{ old('harga_dengan_pajak', $barang->harga_pokok + 2000) }}">
-                                <small class="form-text text-muted">Harga setelah pajak (Rp. 1000)</small>
-                            </div>
+                <!-- Harga Barang -->
+                <div class="mb-4">
+                    <label for="harga_barang" class="block text-lg font-semibold text-gray-700">Harga Barang</label>
+                    <input type="number" name="harga_barang" id="harga_barang" 
+                           class="w-full px-4 py-3 border border-gray-300 rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                           value="{{ old('harga_barang', $barang->harga_pokok + 1500) }}" required oninput="updateHarga(); updateHargaWeb();">
+                    <small class="text-sm text-gray-500">Harga sebelum retribusi</small>
+                </div>
 
-                            <!-- Jumlah Barang -->
-                            <div class="mb-4">
-                                <label for="jumlah_barang" class="form-label fw-bold">Jumlah Barang</label>
-                                <input type="number" name="jumlah_barang" id="jumlah_barang" class="form-control rounded-pill shadow-sm" value="{{ old('jumlah_barang', $barang->jumlah_barang) }}" required>
-                            </div>
+                <!-- Harga Setelah Retribusi -->
+                <div class="mb-4">
+                    <label for="harga_dengan_retribusi" class="block text-lg font-semibold text-gray-700">Harga Setelah Retribusi</label>
+                    <input type="text" id="harga_dengan_retribusi" 
+                           class="w-full px-4 py-3 border border-gray-300 rounded-full shadow-sm bg-gray-100 text-gray-600" 
+                           readonly value="{{ old('harga_dengan_retribusi', $barang->harga_pokok + 2000) }}">
+                    <small class="text-sm text-gray-500">Harga setelah retribusi (Rp. 1000)</small>
+                </div>
 
-                            <!-- Foto Barang -->
-                            <div class="mb-4">
-                                <label for="foto_barang" class="form-label fw-bold">Foto Barang</label>
-                                <input type="file" name="foto_barang" id="foto_barang" class="form-control shadow-sm">
-                                <div class="mt-3">
-                                    <p class="mb-2 fw-bold">Foto Saat Ini:</p>
-                                    <img src="{{ asset('storage/' . $barang->foto_barang) }}" alt="{{ $barang->nama_barang }}" class="img-thumbnail rounded shadow-lg" style="width: 150px;">
-                                </div>
-                            </div>
+                <!-- Harga Setelah Jasa Web -->
+                <div class="mb-4">
+                    <label for="harga_dengan_web" class="block text-lg font-semibold text-gray-700">Harga Setelah Jasa Web</label>
+                    <input type="text" id="harga_dengan_web" 
+                           class="w-full px-4 py-3 border border-gray-300 rounded-full shadow-sm bg-gray-100 text-gray-600" 
+                           readonly value="{{ old('harga_dengan_web', $barang->harga_pokok + 2500) }}">
+                    <small class="text-sm text-gray-500">Harga setelah jasa web (Rp. 2500)</small>
+                </div>
 
-                            <!-- Tombol Kembali dan Update -->
-                            <div class="d-flex justify-content-between mt-4">
-                                <!-- Tombol Kembali -->
-                                <a href="{{ route('barangs.index') }}" class="btn btn-secondary btn-lg rounded-pill shadow">
-                                    <i class="bi bi-arrow-left-circle"></i> Kembali
-                                </a>
+                <!-- Jumlah Barang -->
+                <div class="mb-4">
+                    <label for="jumlah_barang" class="block text-lg font-semibold text-gray-700">Jumlah Barang</label>
+                    <input type="number" name="jumlah_barang" id="jumlah_barang" 
+                           class="w-full px-4 py-3 border border-gray-300 rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                           value="{{ old('jumlah_barang', $barang->jumlah_barang) }}" required>
+                </div>
 
-                                <!-- Tombol Update -->
-                                <button type="submit" class="btn btn-success btn-lg rounded-pill shadow">
-                                    <i class="bi bi-save"></i> Update Barang
-                                </button>
-                            </div>
-                        </form>
+                <!-- Foto Barang -->
+                <div class="mb-4">
+                    <label for="foto_barang" class="block text-lg font-semibold text-gray-700">Foto Barang</label>
+                    <input type="file" name="foto_barang" id="foto_barang" 
+                           class="w-full px-4 py-3 border bg-white border-gray-300 rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <div class="mt-3">
+                        <p class="font-semibold text-gray-800">Foto Saat Ini:</p>
+                        <img src="{{ asset('storage/' . $barang->foto_barang) }}" alt="{{ $barang->nama_barang }}" 
+                             class="w-36 h-36 object-cover rounded-lg shadow-lg">
                     </div>
                 </div>
-            </div>
+
+                <!-- Keterangan (Opsional) -->
+                <div class="mb-4">
+                    <label for="keterangan_barang" class="block text-lg font-semibold text-gray-700">Keterangan (Opsional)</label>
+                    <textarea name="keterangan_barang" id="keterangan_barang" rows="4" 
+                            class="w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" 
+                            placeholder="Tambahkan informasi tambahan tentang barang">{{ old('keterangan_barang', $barang->keterangan_barang) }}</textarea>
+                </div>
+
+                <!-- Tombol Kembali dan Update -->
+                <div class="flex justify-between mt-6 space-x-4">
+                    <a href="{{ route('barangs.index') }}" class="bg-gray-600 text-white px-6 py-3 rounded-full text-lg font-semibold hover:bg-gray-700 focus:ring-2 focus:ring-blue-500 transition transform hover:scale-105">
+                        <i class="bi bi-arrow-left-circle"></i> Kembali
+                    </a>
+                    <button type="submit" class="bg-green-600 text-white px-6 py-3 rounded-full text-lg font-semibold hover:bg-green-700 focus:ring-2 focus:ring-blue-500 transition transform hover:scale-105">
+                        <i class="bi bi-save"></i> Update Barang
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
-</body>
-    <script>
+</div>
+
+<script>
     function updateHarga() {
         var hargaBarang = parseFloat(document.getElementById('harga_barang').value);
-        var pajak = 1000;  // Pajak yang ingin ditambahkan
-        var hargaDenganPajak = hargaBarang + pajak;
+        var retribusi = 1000;
+        var hargaDenganRetribusi = hargaBarang + retribusi;
+        document.getElementById('harga_dengan_retribusi').value = hargaDenganRetribusi.toFixed(0);
+    }
 
-        // Menampilkan harga setelah pajak tanpa desimal
-        document.getElementById('harga_dengan_pajak').value = hargaDenganPajak.toFixed(0); // Menghilangkan desimal
+    function updateHargaWeb() {
+        var hargaDenganRetribusi = parseFloat(document.getElementById('harga_dengan_retribusi').value);
+        var jasaWeb = 500;
+        var hargaDenganJasaWeb = hargaDenganRetribusi + jasaWeb;
+        document.getElementById('harga_dengan_web').value = hargaDenganJasaWeb.toFixed(0);
     }
 
     function validateForm() {
         var hargaBarang = parseFloat(document.getElementById('harga_barang').value);
         var jumlahBarang = parseInt(document.getElementById('jumlah_barang').value);
 
-        // Validasi harga barang tidak boleh kurang dari 0
         if (hargaBarang < 0) {
             alert("Harga barang tidak boleh kurang dari 0");
             return false;
         }
 
-        // Validasi jumlah barang tidak boleh kurang dari 1
         if (jumlahBarang < 1) {
             alert("Jumlah barang tidak boleh kurang dari 1");
             return false;
@@ -97,56 +134,6 @@
 
         return true;
     }
-    </script>
+</script>
 
-    <style>
-body {
-    font-family: 'Poppins', sans-serif;
-    background-image: url('{{ asset('storage/bg.jpg') }}');
-    background-size: cover;  /* Membuat gambar memenuhi layar */
-    background-position: center;  /* Memastikan gambar ditempatkan di tengah */
-    min-height: 100vh;  /* Pastikan body memiliki tinggi minimal 100% dari tinggi layar */
-    display: flex;
-    flex-direction: column;
-}
-
-    .card-header {
-        background: linear-gradient(45deg, #007bff, #6c757d);
-        border-top-left-radius: 15px;
-        border-top-right-radius: 15px;
-    }
-
-    .card {
-        border-radius: 15px;
-    }
-
-    .form-control {
-        border: 1px solid #ced4da;
-        transition: box-shadow 0.3s ease-in-out;
-    }
-
-    .form-control:focus {
-        box-shadow: 0 0 5px rgba(0, 123, 255, 0.8);
-        border-color: #007bff;
-    }
-
-    .btn {
-        transition: all 0.3s ease-in-out;
-    }
-
-    .btn:hover {
-        transform: scale(1.05);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    }
-
-    .btn-lg {
-        padding: 10px 25px;
-        font-size: 1.2rem;
-    }
-
-    .d-flex {
-        gap: 10px; /* Spasi antara tombol */
-    }
-    </style>
-</body>
 @endsection

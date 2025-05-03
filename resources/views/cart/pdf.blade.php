@@ -26,6 +26,7 @@
                 <th>Harga</th>
                 <th>Jumlah</th>
                 <th>Total Harga</th>
+                <th>Deskripsi</th>
             </tr>
         </thead>
         <tbody>
@@ -35,6 +36,7 @@
                     <td>Rp. {{ number_format($item['price'], 2, ',', '.') }}</td>
                     <td>{{ $item['quantity'] }}</td>
                     <td>Rp. {{ number_format($item['price'] * $item['quantity'], 2, ',', '.') }}</td>
+                    <td>{{ $item['description'] ?? 'Tidak ada deskripsi' }}</td>
                 </tr>
             @endforeach
         </tbody>

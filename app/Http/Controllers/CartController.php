@@ -91,58 +91,42 @@ class CartController extends Controller
         // Tampilkan view dengan data keranjang yang valid
         return view('cart.index', compact('cartItems', 'total'));
     }
+
+    public function edit($id)
+    {
+        $cartItems = session()->get('cart', []);
+        
+        if (!isset($cartItems[$id])) {
+            return redirect()->route('cart.index')->with('warning', 'Barang tidak ditemukan di keranjang.');
+        }
+
+        return view('cart.edit', [
+            'id' => $id,
+            'item' => $cartItems[$id],
+        ]);
+    }
+
     public function update(Request $request, $id)
     {
         $request->validate([
-            'quantity' => 'required|integer|min:1', // Validasi jumlah harus minimal 1
+            'quantity' => 'required|integer|min:1',
+            'description' => 'nullable|string|max:256',
         ]);
-    
-        $cart = session()->get('cart', []); // Ambil keranjang dari session
-    
-        if (!isset($cart[$id])) {
-            return redirect()->back()->with('error', 'Barang tidak ditemukan di keranjang!');
+
+        $cartItems = session()->get('cart', []);
+
+        if (!isset($cartItems[$id])) {
+            return redirect()->route('cart.index')->with('warning', 'Barang tidak ditemukan di keranjang.');
         }
-    
-        $newQuantity = $request->quantity; // Jumlah barang baru
-        $oldQuantity = $cart[$id]['quantity']; // Jumlah barang saat ini di keranjang
-        $initialStock = $cart[$id]['initial_stock']; // Stok awal barang sebelum ditambahkan ke keranjang
-    
-        $barang = Barang::find($id);
-        if (!$barang) {
-            // Jika barang tidak ada di database, hapus dari keranjang
-            unset($cart[$id]);
-            session()->put('cart', $cart);
-            return redirect()->back()->with('error', 'Barang ini telah dihapus dari database dan tidak tersedia lagi.');
-        }
-    
-        $availableStock = $barang->jumlah_barang; // Stok tersisa di database
-        $maxAvailableStock = $availableStock + $oldQuantity; // Total stok yang bisa digunakan
-    
-        if ($newQuantity > $maxAvailableStock) {
-            return redirect()->back()->with('error', 'Jumlah barang tidak mencukupi stok yang tersedia!');
-        }
-    
-        DB::beginTransaction();
-        try {
-            // Hitung selisih jumlah barang
-            $quantityDifference = $newQuantity - $oldQuantity;
-    
-            // Update jumlah barang di keranjang
-            $cart[$id]['quantity'] = $newQuantity;
-    
-            // Sesuaikan stok di database
-            $barang->jumlah_barang -= $quantityDifference; // Jika quantityDifference negatif, stok akan bertambah
-            $barang->save();
-    
-            // Simpan keranjang kembali ke session
-            session()->put('cart', $cart);
-    
-            DB::commit();
-            return redirect()->back()->with('success', 'Jumlah barang berhasil diperbarui!');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return redirect()->back()->with('error', 'Terjadi kesalahan saat memperbarui barang. Silakan coba lagi.');
-        }
+
+        // Update data barang
+        $cartItems[$id]['quantity'] = $request->input('quantity');
+        $cartItems[$id]['description'] = $request->input('description');
+
+        // Simpan kembali ke session
+        session()->put('cart', $cartItems);
+
+        return redirect()->route('cart.index')->with('success', 'Barang berhasil diperbarui.');
     }
     
     public function remove(Request $request)
@@ -200,9 +184,9 @@ class CartController extends Controller
             }
     
             // Hanya cek apakah stok barang yang diminta masih cukup di keranjang
-            if ($barang->jumlah_barang < ($item['initial_stock'] - $item['quantity'])) {
+            if (isset($item['initial_stock']) && $barang->jumlah_barang < ($item['initial_stock'] - $item['quantity'])) {
                 $errorMessages[] = 'Stok barang ' . $item['name'] . ' hanya tersisa ' . $barang->jumlah_barang . '. Anda akan membeli dengan jumlah yang tersedia.';
-            }
+            }            
         }
     
         // Jika ada pesan peringatan (bukan error), tampilkan pesan tapi lanjutkan ke halaman checkout
@@ -218,6 +202,83 @@ class CartController extends Controller
         // Return ke halaman checkout
         return view('cart.checkout', compact('cartItems', 'totalHarga', 'order'));
     }
+
+    // Menampilkan halaman jumlah dan tombol tambah
+    public function showAddForm($id = null)
+    {
+        if (!$id) {
+            return redirect()->route('barangs.index')->with('error', 'Barang tidak ditemukan.');
+        }
+    
+        $barang = Barang::findOrFail($id);
+        return view('cart.add', compact('barang'));
+    }    
+
+    // Menambah barang dari form khusus
+    public function addFromForm(Request $request)
+{
+    $request->validate([
+        'id' => 'required|exists:barangs,id',
+        'quantity' => 'required|integer|min:1',
+        'description' => 'nullable|string|max:255', // Validasi deskripsi opsional
+    ]);
+
+    // Ambil barang berdasarkan ID
+    $barang = Barang::findOrFail($request->id);
+
+    // Cek stok sebelum menambahkannya ke keranjang
+    if ($barang->jumlah_barang < $request->quantity) {
+        return redirect()->back()->with('error', 'Stok barang tidak mencukupi.');
+    }
+
+    // Ambil keranjang dari sesi
+    $cart = session()->get('cart', []);
+
+    // Cek jika barang sudah ada di keranjang
+    if (isset($cart[$barang->id])) {
+        $totalQuantity = $cart[$barang->id]['quantity'] + $request->quantity;
+
+        if ($totalQuantity > $barang->jumlah_barang) {
+            return redirect()->back()->with('error', 'Stok barang tidak mencukupi untuk jumlah yang diinginkan.');
+        }
+
+        // Update jumlah barang di keranjang
+        $cart[$barang->id]['quantity'] = $totalQuantity;
+    } else {
+        // Tambahkan barang baru ke keranjang
+        $cart[$barang->id] = [
+            'id' => $barang->id,
+            'name' => $barang->nama_barang,
+            'price' => $barang->harga_barang,
+            'quantity' => $request->quantity,
+            'description' => $request->description,
+            'foto_barang' => $barang->foto_barang,
+            'initial_stock' => $barang->jumlah_barang,
+        ];
+    }
+
+    // Update stok barang di database
+    $barang->jumlah_barang -= $request->quantity;
+    $barang->save();
+
+    // Simpan keranjang kembali ke sesi
+    session()->put('cart', $cart);
+    session()->put('cart.count', array_sum(array_column($cart, 'quantity')));
+
+    return redirect()->route('cart.index')->with('success', 'Barang berhasil ditambahkan ke keranjang!');
+
+
+    
+        // Update stok barang di database
+        $barang->jumlah_barang -= $request->quantity;
+        $barang->save();
+    
+        // Simpan keranjang kembali ke session
+        session()->put('cart', $cart);
+        session()->put('cart.count', array_sum(array_column($cart, 'quantity')));
+    
+        return redirect()->route('cart.index')->with('success', 'Barang berhasil ditambahkan ke keranjang!');
+    }    
 
     public function completeCheckout(Request $request)
     {

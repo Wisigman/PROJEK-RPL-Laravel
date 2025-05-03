@@ -1,67 +1,41 @@
-<x-guest-layout>
-    <div class="flex justify-center items-center bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500">
-        <div class="w-full max-w-m rounded-lg p-6 transform transition duration-500 hover:scale-105">
-            <div class="text-center mb-6">
-                <h2 class="text-3xl font-extrabold text-gray-800">Forgot Password?</h2>
-                <p class="text-sm text-gray-500">
-                    {{ __('No problem. Just let us know your email address and we will email you a password reset link.') }}
-                </p>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forgot Password</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen flex items-center justify-center bg-cover bg-center" style="background-image: url('{{ asset('storage/bg.jpg') }}')">
+    <div class="bg-white bg-opacity-80 p-8 rounded-lg shadow-lg max-w-md w-full text-center">
+        <div class="w-36 h-36 mx-auto mb-6 rounded-full">
+            <img src="{{ asset('storage/logo.png') }}" alt="Logo" class="w-full h-full object-contain">
+        </div>
+        <h2 class="text-2xl font-semibold text-gray-800 mb-2">Forgot Password?</h2>
+        <p class="text-sm text-gray-600 mb-6">No problem. Just let us know your email address and we will email you a password reset link.</p>
+        
+        <form method="POST" action="{{ route('password.email') }}">
+            @csrf
+            
+            <div class="mb-4">
+                <label for="email" class="block text-left font-medium text-gray-700 mb-1">Email</label>
+                <input type="email" id="email" name="email" value="{{ old('email') }}" placeholder="Enter your email" required autofocus 
+                       class="w-full px-4 py-3 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                @if ($errors->has('email'))
+                    <span class="text-red-600 text-sm">{{ $errors->first('email') }}</span>
+                @endif
             </div>
 
-            <!-- Session Status -->
-            <x-auth-session-status class="mb-4 text-green-600 text-sm" :status="session('status')" />
+            <button type="submit" class="w-full bg-indigo-600 text-white py-2 rounded-lg font-medium hover:bg-indigo-700 transition">
+                Send Reset Link
+            </button>
+        </form>
 
-            <form method="POST" action="{{ route('password.email') }}">
-                @csrf
-
-                <!-- Email Address -->
-                <div class="mb-6">
-                    <x-input-label for="email" :value="__('Email')" />
-                    <x-text-input 
-                        id="email" 
-                        class="block mt-1 w-full px-4 py-3 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-300" 
-                        type="email" 
-                        name="email" 
-                        :value="old('email')" 
-                        required 
-                        autofocus 
-                        placeholder="Enter your email" />
-                    <x-input-error :messages="$errors->get('email')" class="mt-2 text-red-600 text-sm" />
-                </div>
-
-                <!-- Submit Button -->
-                <div class="flex items-center justify-between">
-                    <a href="{{ route('login') }}" class="text-sm text-gray-600 hover:text-gray-900">
-                        {{ __('Back to login') }}
-                    </a>
-                    <x-primary-button class="ms-4 px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 transition duration-300">
-                        {{ __('Send Reset Link') }}
-                    </x-primary-button>
-                </div>
-            </form>
+        <div class="mt-4">
+            <p class="text-sm text-gray-600">Remember your password? 
+                <a href="{{ route('login') }}" class="text-indigo-600 font-medium">Back to login</a>
+            </p>
         </div>
     </div>
-
-    <style>
-        /* Background gradient effect */
-        body {
-            background: linear-gradient(135deg, #4c6ef5, #3b82f6, #9333ea);
-        }
-        
-        /* Button hover effect */
-        .primary-btn:hover {
-            background-color: #4c6ef5;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        /* Input focused and error states */
-        .input-error {
-            border-color: #f87171;
-        }
-
-        .input-error:focus {
-            border-color: #f87171;
-            box-shadow: 0 0 0 2px rgba(248, 113, 113, 0.5);
-        }
-    </style>
-</x-guest-layout>
+</body>
+</html>

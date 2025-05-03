@@ -18,9 +18,7 @@ class BarangController extends Controller
         $barangs = Barang::all();
         ($barangs); // Untuk memastikan apakah data ada
         return view('barangs.index', compact('barangs'));
-    }
-    
-
+    }   
 
     public function create()
     {
@@ -34,9 +32,11 @@ class BarangController extends Controller
     {
         $validated = $request->validate([
             'nama_barang' => 'required|string|max:255',
+            'kategori_barang' => 'required|in:makanan,kerajinan',
             'harga_barang' => 'required|numeric',
             'jumlah_barang' => 'required|numeric',
             'foto_barang' => 'required|image|mimes:jpg,jpeg,png,gif|max:2048',
+            'keterangan_barang' => 'nullable|string|max:1000',
         ]);
     
         // Jika pengguna memiliki peran yang benar
@@ -65,82 +65,92 @@ class BarangController extends Controller
         abort(403, 'Anda tidak memiliki izin untuk menambah barang.');
     }    
     
-public function edit(Barang $barang)
-{
-    // Log informasi untuk debugging
-    Log::info('User role: ' . Auth::user()->role);
-    Log::info('User ID: ' . Auth::id());
-    Log::info('Barang user ID: ' . $barang->user_id);
+    public function edit(Barang $barang)
+    {
+        // Log informasi untuk debugging
+        Log::info('User role: ' . Auth::user()->role);
+        Log::info('User ID: ' . Auth::id());
+        Log::info('Barang user ID: ' . $barang->user_id);
 
-    // Cek apakah user memiliki izin untuk mengedit barang
-    if (Auth::check() && (Auth::user()->role === 'admin' || (Auth::user()->role === 'supplier' && Auth::id() === $barang->user_id))) {
-        return view('barangs.edit', compact('barang'));
-    }
-
-    // Jika tidak memiliki izin, tampilkan pesan error
-    abort(403, 'Anda tidak memiliki izin untuk mengedit barang ini.');
-}
-
-
-public function destroy($id)
-{
-    $barang = Barang::findOrFail($id);
-    if (Auth::user()->role !== 'admin' && Auth::user()->id !== $barang->user_id) {
-        return redirect()->route('barangs.index')->with('error', 'Anda tidak memiliki izin untuk menghapus barang ini.');
-    }
-    $barang->delete();
-    return redirect()->route('barangs.index')->with('status', 'Barang berhasil dihapus.');
-}
-
-public function update(Request $request, Barang $barang)
-{
-    // Validasi input yang diterima
-    $validated = $request->validate([
-        'nama_barang' => 'required|string|max:255',
-        'harga_barang' => 'required|numeric|min:0',
-        'jumlah_barang' => 'required|integer|min:1',
-        'foto_barang' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-    ]);
-
-    // Memeriksa apakah pengguna memiliki peran yang benar untuk mengupdate barang
-    if (Auth::check() && (Auth::user()->role === 'admin' || (Auth::user()->role === 'supplier' && Auth::id() === $barang->user_id))) {
-
-        // Pastikan harga barang valid
-        $hargaBarang = $validated['harga_barang'];
-
-        // Menghitung harga pokok sebelum pajak
-        $hargaPokok = $hargaBarang - 1000;  // Asumsi pajak sebesar 1000
-
-        // Menyimpan harga pokok sebelum pajak
-        $validated['harga_pokok'] = $hargaPokok;
-
-        // Mengupdate jumlah barang awal
-        $validated['jumlah_barang_awal'] = $validated['jumlah_barang'];  // Set jumlah barang sebagai jumlah awal
-
-        // Jika ada foto yang diupload, simpan foto baru dan hapus yang lama
-        if ($request->hasFile('foto_barang')) {
-            // Menghapus foto lama jika ada
-            if ($barang->foto_barang) {
-                Storage::delete('public/' . $barang->foto_barang);
-            }
-
-            // Menyimpan foto baru
-            $validated['foto_barang'] = $request->file('foto_barang')->store('images', 'public');
-        } else {
-            // Jika tidak ada foto yang diupload, hapus data foto dari array validated
-            unset($validated['foto_barang']);
+        // Cek apakah user memiliki izin untuk mengedit barang
+        if (Auth::check() && (Auth::user()->role === 'admin' || (Auth::user()->role === 'supplier' && Auth::id() === $barang->user_id))) {
+            return view('barangs.edit', compact('barang'));
         }
 
-        // Mengupdate data barang
-        $barang->update($validated);
-
-        // Redirect kembali dengan pesan sukses
-        return redirect()->route('barangs.index')->with('success', 'Barang berhasil diperbarui!');
+        // Jika tidak memiliki izin, tampilkan pesan error
+        abort(403, 'Anda tidak memiliki izin untuk mengedit barang ini.');
     }
 
-    // Jika pengguna tidak memiliki izin, tampilkan halaman error 403
-    abort(403, 'Anda tidak memiliki izin untuk memperbarui barang ini.');
-}
+
+    public function destroy($id)
+    {
+        $barang = Barang::findOrFail($id);
+        if (Auth::user()->role !== 'admin' && Auth::user()->id !== $barang->user_id) {
+            return redirect()->route('barangs.index')->with('error', 'Anda tidak memiliki izin untuk menghapus barang ini.');
+        }
+        $barang->delete();
+        return redirect()->route('barangs.index')->with('status', 'Barang berhasil dihapus.');
+    }
+
+    public function update(Request $request, Barang $barang)
+    {
+        // Validasi input yang diterima
+        $validated = $request->validate([
+            'nama_barang' => 'required|string|max:255',
+            'kategori_barang' => 'required|in:makanan,kerajinan',
+            'harga_barang' => 'required|numeric|min:0',
+            'jumlah_barang' => 'required|integer|min:1',
+            'foto_barang' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'keterangan_barang' => 'nullable|string|max:1000',
+        ]);
+
+        // Memeriksa apakah pengguna memiliki peran yang benar untuk mengupdate barang
+        if (Auth::check() && (Auth::user()->role === 'admin' || (Auth::user()->role === 'supplier' && Auth::id() === $barang->user_id))) {
+
+            // Pastikan harga barang valid
+            $hargaBarang = $validated['harga_barang'];
+
+            // Menghitung harga pokok sebelum pajak (Harga barang dikurangi pajak)
+            $hargaPokok = $hargaBarang - 1500;  // Asumsi pajak sebesar 1500
+
+            // Menghitung harga setelah retribusi (harga barang ditambah retribusi)
+            $hargaDenganRetribusi = $hargaBarang + 1000;  // Asumsi retribusi Rp1000
+
+            // Menghitung harga setelah jasa web (harga barang ditambah jasa web)
+            $hargaDenganJasaWeb = $hargaDenganRetribusi + 500;  // Biaya jasa web Rp500
+
+            // Menyimpan harga pokok, harga dengan retribusi, dan harga dengan jasa web
+            $validated['harga_pokok'] = $hargaPokok;
+            $validated['harga_dengan_retribusi'] = $hargaDenganRetribusi;
+            $validated['harga_dengan_web'] = $hargaDenganJasaWeb;
+
+            // Mengupdate jumlah barang awal
+            $validated['jumlah_barang_awal'] = $validated['jumlah_barang'];  // Set jumlah barang sebagai jumlah awal
+
+            // Jika ada foto yang diupload, simpan foto baru dan hapus yang lama
+            if ($request->hasFile('foto_barang')) {
+                // Menghapus foto lama jika ada
+                if ($barang->foto_barang) {
+                    Storage::delete('public/' . $barang->foto_barang);
+                }
+
+                // Menyimpan foto baru
+                $validated['foto_barang'] = $request->file('foto_barang')->store('images', 'public');
+            } else {
+                // Jika tidak ada foto yang diupload, hapus data foto dari array validated
+                unset($validated['foto_barang']);
+            }            
+
+            // Mengupdate data barang
+            $barang->update($validated);
+
+            // Redirect kembali dengan pesan sukses
+            return redirect()->route('barangs.index')->with('success', 'Barang berhasil diperbarui!');
+        }
+
+        // Jika pengguna tidak memiliki izin, tampilkan halaman error 403
+        abort(403, 'Anda tidak memiliki izin untuk memperbarui barang ini.');
+    }
 
     public function beli(Request $request, $id)
     {
@@ -273,14 +283,19 @@ public function show($id)
         $keuntunganPKK = $jumlahBarangTerjual * 1000;
 
         // Menghitung hasil untuk pengirim (harga satuan awal * jumlah barang terjual)
-        $totalHasilPengiriman = $jumlahBarangTerjual * ($barang->harga_barang - 1000);  // Hasil pengiriman adalah hasil dari harga awal dikurangi keuntungan PKK
+        $totalHasilPengiriman = $jumlahBarangTerjual * ($barang->harga_barang - 1000);
+
+        // Mengurangi keuntungan tambahan sebesar 500 per barang dari hasil pengirim
+        $totalHasilPengiriman -= $jumlahBarangTerjual * 500;
     }
 
     // Menghitung jumlah barang sisa
     $jumlahBarangSisa = $barang->jumlah_barang_awal - $jumlahBarangTerjual;
 
+    // Kirimkan semua variabel yang diperlukan ke view
     return view('barangs.show', compact(
         'barang',
+        'jumlahBarangTerjual',
         'jumlahBarangSisa',
         'totalHargaTerjual',
         'keuntunganPKK',
